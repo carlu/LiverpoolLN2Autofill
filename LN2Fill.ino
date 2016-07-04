@@ -21,6 +21,10 @@ List of commands to be implemented:
     * Last fill success/fail and if success then duration
 ---------------------------------------- */
 
+// Definitions
+#define VALVEOPEN 0
+#define VALVECLOSED 1
+
 // Global variables
 
 BridgeServer Server;  // server for handling requests/commands
@@ -68,9 +72,11 @@ void setup() {
   // Initialise pins
   int Pin, Line;
   pinMode(SupplyTankPin,OUTPUT);   // Main supply valve control
+  digitalWrite(SupplyTankPin,VALVECLOSED);
   for(Line = 0; Line < NumFillLines; Line++) {  // Individual line valves
     Pin = LineValvePins[Line];
     pinMode(Pin,OUTPUT);
+    digitalWrite(Pin,VALVECLOSED);
   }
   pinMode(13,OUTPUT); // General status LED.
 
@@ -128,7 +134,7 @@ void process(BridgeClient Client) {
   if(Command == "readvalve") {
     readvalve(Client);
   }
-  
+
   // Initiiate fill cycle commands
   if(Command == "fillline") {
     fillline(Client);
@@ -168,7 +174,7 @@ void openline(BridgeClient Client) {
 
   Pin = LineValvePins[LineNumber - 1];
 
-  digitalWrite(Pin,1);
+  digitalWrite(Pin,VALVEOPEN);
 
   Client.print(F("Opening line "));
   Client.print(LineNumber);
@@ -189,7 +195,7 @@ void closeline(BridgeClient Client) {
 
   Pin = LineValvePins[LineNumber - 1];
 
-  digitalWrite(Pin,0);
+  digitalWrite(Pin,VALVECLOSED);
 
   Client.print(F("Closing line "));
   Client.print(LineNumber);
@@ -200,7 +206,7 @@ void closeline(BridgeClient Client) {
 
 void opentank(BridgeClient Client) {
 
-  digitalWrite(SupplyTankPin,1);
+  digitalWrite(SupplyTankPin,VALVEOPEN);
 
   Client.print(F("Opening main supply tank (Pin "));
   Client.print(SupplyTankPin);
@@ -209,7 +215,7 @@ void opentank(BridgeClient Client) {
 
 void closetank(BridgeClient Client) {
 
-  digitalWrite(SupplyTankPin,0);
+  digitalWrite(SupplyTankPin,VALVECLOSED);
 
   Client.print(F("Closing main supply tank (Pin "));
   Client.print(SupplyTankPin);
@@ -255,20 +261,17 @@ void readvalve(BridgeClient Client) {
   }
 
   Pin = LineValvePins[LineNumber - 1];
-  Value = digitalRead(Pin);
+  Value = (digitalRead(Pin)==VALVEOPEN);
 
   Client.print(F("Valve for line "));
   Client.print(LineNumber);
   Client.print(F(" is "));
-  Client.print(Value==1 ? "Open." : "Closed.");
+  Client.print(Value ? "Open." : "Closed.");
 }
 
 
 void readstatus(BridgeClient Client){
-  // This function should return a table showin g status of all lines
-  Client.print(F("This function should return status of all lines\n"));
-  Client.print(F("Not done yet...\n"));
-
+  // This function should return a table showing status of all lines
   // Write headings...
   Client.print(F("# University of Liverpool - Nuclear Physics - LN2 Fill System\n\n"));
   Client.print(F("# Full Fill-line Status Report:\n"));
@@ -279,13 +282,13 @@ void readstatus(BridgeClient Client){
   int AdcVal;
   bool ValveOpen;
   int Status;
-  
+
   for (i=0;i<NumFillLines;i++) {
 
     AdcVal = analogRead(LineLedPins[i]);
-    ValveOpen = digitalRead(LineValvePins[i]);
+    ValveOpen = (digitalRead(LineValvePins[i])==VALVEOPEN);
     Status = LineStatus[i];
-    
+
     sprintf(StatusMessage,"%d\t\t%s\t%d\t%04f\t\t%d\t%f\t%d\t\t%s\t\t%s\n",i,LineActive[i]==1?"Yes":"No",LineLedPins[i],LineLedThresh[i],\
         AdcVal,Adc2Volts(AdcVal),LineValvePins[i],ValveOpen?"Open":"Closed",LineStatus[i]?"Success!":"Fail!");
 
@@ -293,13 +296,13 @@ void readstatus(BridgeClient Client){
   }
 
 
-  
+
 }
 
 // Functions for initiating/managing fill cylce
 // -----------------------------------------------
 
-// Fill a single line, 
+// Fill a single line,
 int fillline(BridgeClient Client) {
   int LineNumber;
   int FillTime = 0;
@@ -315,17 +318,17 @@ int fillline(BridgeClient Client) {
 
   Client.print(F("Filling line "));
   Client.print(LineNumber);
-  Client.print(F("Please wait...\n\n"));
+  Client.print(F(" please wait...\n\n"));
   Client.print(F("Time(s)\tLED Volts\tStatus\n"));
 
   short ValvePin = LineValvePins[LineNumber - 1];
   short LedPin = LineLedPins[LineNumber - 1];
 
   // Open main valve to tank
-  digitalWrite(SupplyTankPin,1);
-  
+  digitalWrite(SupplyTankPin,VALVEOPEN);
+
   // Open valve to line
-  digitalWrite(ValvePin,1);
+  digitalWrite(ValvePin,VALVEOPEN);
 
   int LedOverThreshTime = 0;
   // Monitor LED and output value until success or timeout
@@ -353,9 +356,9 @@ int fillline(BridgeClient Client) {
     Client.flush();
 
     FillTime += 1;
-    
+
     delay(1000); // Wait 1s
-    
+
   }
 
   if (FillTime < FillTimeout) {
@@ -366,12 +369,12 @@ int fillline(BridgeClient Client) {
     Client.print("\nFail!!!");
     LineStatus[LineNumber -1] = 0;
   }
-  
+
   // Close valve
-  digitalWrite(ValvePin,0);
+  digitalWrite(ValvePin,VALVECLOSED);
 
   // Close tank
-  digitalWrite(SupplyTankPin,0);
+  digitalWrite(SupplyTankPin,VALVECLOSED);
 
   // return fill time
   return FillTime;
@@ -379,7 +382,7 @@ int fillline(BridgeClient Client) {
 
 // Fill all active lines
 int fillall(BridgeClient Client) {
-  
+
 }
 
 // Helper functions

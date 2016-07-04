@@ -36,5 +36,7 @@ This repository contains the code for the University of Liverpool Nuclear Physic
 ## Authors
 
 Carl Unsworth
+
 Dan Judson
-Design of LED based LN2 flow detection copied from TRIUMF GRSI group. 
+
+Design of LED based LN2 flow sensors copied from TRIUMF GRSI group. 
