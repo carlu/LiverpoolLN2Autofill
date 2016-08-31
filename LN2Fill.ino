@@ -22,8 +22,11 @@ List of commands to be implemented:
 ---------------------------------------- */
 
 // Definitions
-#define VALVEOPEN 0
-#define VALVECLOSED 1
+#define VALVEOPEN 1
+#define VALVECLOSED 0
+
+#define FILLHOLDTIME 20
+#define FILLTIMEOUT 300
 
 // Global variables
 
@@ -58,9 +61,6 @@ const int LineActive[] = {
 int LineStatus[] = {
   0, 0, 0, 0
 };
-
-const short FillHoldTime = 20; // seconds, LED over threshold for this long for success
-const short FillTimeout = 300; // seconds
 
 // Setup and main loop
 // ----------------------------------
@@ -332,7 +332,7 @@ int fillline(BridgeClient Client) {
 
   int LedOverThreshTime = 0;
   // Monitor LED and output value until success or timeout
-  while (FillTime < FillTimeout) {
+  while (FillTime < FILLTIMEOUT) {
 
     LedVolts = Adc2Volts(analogRead(LedPin));
 
@@ -342,7 +342,7 @@ int fillline(BridgeClient Client) {
       LedOverThreshTime = 0;
     }
 
-    if (LedOverThreshTime >= FillHoldTime) {
+    if (LedOverThreshTime >= FILLHOLDTIME) {
       Client.print(F("Fill complete, closing valves..."));
       break;
     }
@@ -361,7 +361,7 @@ int fillline(BridgeClient Client) {
 
   }
 
-  if (FillTime < FillTimeout) {
+  if (FillTime < FILLTIMEOUT) {
     Client.print("\nSuccess!!!");
     LineStatus[LineNumber - 1] = 1;
   }
