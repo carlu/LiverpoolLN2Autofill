@@ -180,6 +180,17 @@ void process(BridgeClient Client) {
   if (Command == "fillline_old") {
     fillline_old(Client);
   }
+  if (Command == "activateline") {
+    activateline(Client);
+  }
+  if (Command == "deactivateline") {
+    deactivateline(Client);
+  }
+
+  // reset
+  if (Command == "resetall") {
+    resetall(Client);
+  }
 
   // Following commands are from the example code I used for building this - CU
   // is "digital" Command?
@@ -206,9 +217,9 @@ void process(BridgeClient Client) {
 void openline(BridgeClient Client) {
   int LineNumber, Pin;
 
-  LineNumber = Client.parseInt();
+  LineNumber = Client.parseInt() ;
 
-  if (LineNumber > NUMFILLLINES) {
+  if (LineNumber > NUMFILLLINES || LineNumber < 1) {
     Client.print(F("Unrecognised Line Number!"));
     return;
   }
@@ -229,7 +240,7 @@ void closeline(BridgeClient Client) {
 
   LineNumber = Client.parseInt();
 
-  if (LineNumber > NUMFILLLINES) {
+  if (LineNumber > NUMFILLLINES || LineNumber < 1) {
     Client.print(F("Unrecognised Line Number!"));
     return;
   }
@@ -346,7 +357,7 @@ void readstatus(BridgeClient Client) {
   Client.print(F("# University of Liverpool - Nuclear Physics - LN2 Fill System\n\n# Full Fill-line Status Report:\n"));
   readtime(Client);
   Client.print("Main tank valve is ");
-  Client.print(digitalRead(LineValvePins[i]) == VALVEOPEN ? "Op\n" : "Cl\n");
+  Client.print(digitalRead(SUPPLYTANKPIN) == VALVEOPEN ? "Op\n" : "Cl\n");
   Client.print(F("# LineNum\tActive?\tLED Pin\tLED Thresh\tADC val\tLED V\tValve Pin\tValve Status\tLast Fill Status\t\n\n"));
 
   for (i = 0; i < NUMFILLLINES; i++) {
@@ -383,7 +394,8 @@ void readstatus(BridgeClient Client) {
   }
 
   // No the last fill data from each line
-  Client.print("\n<hr>\n");
+  Client.print("\n");
+  Client.print("\n");
   Client.print("Led values for last fill in ");
   Client.print(FILLLOGINTERVAL);
   Client.print("s intervals:\n");
@@ -452,6 +464,7 @@ void fillline(BridgeClient Client) {
   // Print message
   Client.print("Opening line ");
   Client.print(LineNumber);
+  Client.print("\n");
   readtime(Client);
 
   return;
@@ -647,16 +660,62 @@ void updatefill() {
 
 // Functions for altering settings
 // ------------------------------------
+
+// Function should reset all global variables to default state (i.e. closed valves, not filling)
 void resetall(BridgeClient Client) {
-  // Code should reset all global variables to default state (i.e. closed valves, not filling)
+  int i;
+  Client.print("Shutting all valves and reseting internal variables...");
+  // Close fill tank
+  digitalWrite(SUPPLYTANKPIN, VALVECLOSED);
+
+  for (i = 0; i<NUMFILLLINES; i++) {
+    //Close all line valves
+    digitalWrite(LineValvePins[i], VALVECLOSED);
+    // Reset filling status
+    Filling[i] = 0;
+    LineFillStatus[i] = 0;  // Shows as a failed fill.
+    // Deactivate all lines
+    LineActive[i] = 0;
+    // Reset timers
+    FillStartTime[i] = 0;
+    ColdStartTime[i] = 0;
+    // Reset last fill data
+    clearfilldata(i+1);
+  }
+  NumFilling = 0;
+  return;
 }
 
+// Code should activate specified line
 void activateline(BridgeClient Client) {
   // Code should parse requested line number and activate that line
+  int LineNumber = Client.parseInt();
+
+  if (LineNumber < NUMFILLLINES && LineNumber > 0) {
+    Client.print("Ativating line ");
+    Client.print(LineNumber);
+    Client.print("\n");
+    LineActive[LineNumber - 1] = 1;
+  } else {
+    Client.print("Unrecognised line number.");
+  }
+  return;
 }
 
+// Code should deactivate specified line
 void deactivateline(BridgeClient Client) {
-  // Code should parse requested line number and activate that line
+  // Code should parse requested line number and deactivate that line
+  int LineNumber = Client.parseInt();
+
+  if (LineNumber < NUMFILLLINES && LineNumber > 0) {
+    Client.print("Ativating line ");
+    Client.print(LineNumber);
+    Client.print("\n");
+    LineActive[LineNumber - 1] = 0;
+  } else {
+    Client.print("Unrecognised line number.");
+  }
+  return;
 }
 
 void clearfilldata(int LineNum) {
