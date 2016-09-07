@@ -28,17 +28,15 @@
 // Definitions
 #define LOOPDELAY 100 // ms delay on main loop polling
 
-#define VALVEOPEN 1
-#define VALVECLOSED 0
+#define VALVEOPEN 1     // Value written to GPIO to open a valve
+#define VALVECLOSED 0   // "      "         "       close a valve
 
-#define FILLHOLDTIME 20
-#define FILLMINTIME 60
-#define FILLTIMEOUT 300
+#define FILLHOLDTIME 20   // Time in s for which LED must remain cold for fill success
+#define FILLMINTIME 60    // Min total time for a fill to be a success
+#define FILLTIMEOUT 300   // Max time for fill to be a success
 
-#define FILLLOGINTERVAL 10
-#define FILLLOGLENGTH 30
-
-#define MAXMESSAGESIZE 1024
+#define FILLLOGINTERVAL 10  // Period in seconds of logging of LED value during fill
+#define FILLLOGLENGTH 30    // Maximum length of log, should depend on FILLTIMEOUT
 
 #define SUPPLYTANKPIN 2  // GPIO# used to open supply valve
 #define NUMFILLLINES 4  // Total number of fill lines being managed
@@ -68,20 +66,20 @@ int LineFillStatus[NUMFILLLINES] = {  // Was the last fill a success (=fill time
   0, 0, 0, 0
 };
 
-int LineFillData[NUMFILLLINES][FILLLOGLENGTH];
-int LineFillDataMarker[NUMFILLLINES] = {
+int LineFillData[NUMFILLLINES][FILLLOGLENGTH];  // Stores the LED value log for last fill on each line
+int LineFillDataMarker[NUMFILLLINES] = {        // Stores current log position for last fill on each line
   0, 0, 0, 0
 };
 
 // Globals for managing ongoing fill
 int NumFilling = 0;  // Number of lines currently being filled
-bool Filling[NUMFILLLINES] = {
+bool Filling[NUMFILLLINES] = {  // Stores whether each line is currently filling or not
   0, 0, 0, 0
 };
-time_t FillStartTime[NUMFILLLINES] = {
+time_t FillStartTime[NUMFILLLINES] = {  // Time current fill started for each line
   0, 0, 0, 0
 };
-time_t ColdStartTime[NUMFILLLINES] = {
+time_t ColdStartTime[NUMFILLLINES] = {  // Time LED last indicated cold for each line
   0, 0, 0, 0
 };
 
@@ -116,11 +114,11 @@ void setup() {
 
 void loop() {
 
-  // Get clients coming from server
-  BridgeClient Client = Server.accept();
-
   // Check on any ongoing line fills
   updatefill();
+
+  // Get clients coming from server
+  BridgeClient Client = Server.accept();
 
   // Is there a new client?  If so process its request
   if (Client) {
@@ -131,7 +129,7 @@ void loop() {
   }
 
   // Delay until next loop
-  delay(LOOPDELAY); // Poll every 50ms at most
+  delay(LOOPDELAY); // Poll every LOOPDELAY at most
 
 }
 
@@ -323,9 +321,8 @@ void readvalve(BridgeClient Client) {
 
 void readtime(BridgeClient Client) {
   // This function should display the current system time
-  char s[MAXMESSAGESIZE];
+
   time_t Now = now();
-  //sprintf(s, "Current system time is %ds", Now);
   Client.print(" Current system time is ");
   Client.print(Now);
   //Client.print(s);
