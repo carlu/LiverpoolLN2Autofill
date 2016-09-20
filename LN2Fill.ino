@@ -33,32 +33,34 @@
 
 #define FILLHOLDTIME 20   // Time in s for which LED must remain cold for fill success
 #define FILLMINTIME 60    // Min total time for a fill to be a success
-#define FILLTIMEOUT 300   // Max time for fill to be a success
+#define FILLTIMEOUT 360   // Max time for fill to be a success
 
 #define FILLLOGINTERVAL 10  // Period in seconds of logging of LED value during fill
-#define FILLLOGLENGTH 30    // Maximum length of log, should depend on FILLTIMEOUT
+#define FILLLOGLENGTH (FILLTIMEOUT/FILLLOGINTERVAL)+1    // Maximum length of log, should depend on FILLTIMEOUT
+                                                        // Should not be greater than 255 or LineFillDataMarker[] needs
+                                                        //  to be an int instead of a byte
 
-#define SUPPLYTANKPIN 2  // GPIO# used to open supply valve
+#define SUPPLYTANKPIN 12  // GPIO# used to open supply valve
 #define NUMFILLLINES 4  // Total number of fill lines being managed
 
 // Global variables
 BridgeServer Server;  // server for handling requests/commands
 
 // System configuration
-const short LineValvePins[NUMFILLLINES] = {  // GPIO# used for operating each line
-  8, 9, 10, 11
+const byte LineValvePins[NUMFILLLINES] = {  // GPIO# used for operating each line
+ 11, 9, 10, 8
 };
 
-const short LineLedPins[NUMFILLLINES] = {    // ADC# used to read LED for each line
+const byte LineLedPins[NUMFILLLINES] = {    // ADC# used to read LED for each line
   0, 1, 2, 3
 };
 
 const float LineLedThresh[NUMFILLLINES] = {  // Threshold volts accross LED to class as "cold"
-  3.0, 3.0, 3.0, 3.0
+  1.9,1.9,1.9,1.9
 };
 
 bool LineActive[NUMFILLLINES] = {  // Is this line active (used for "fillall" command)
-  1, 0, 0, 0
+  1, 1, 0, 0
 };
 
 // Last fill stats
@@ -67,12 +69,12 @@ int LineFillStatus[NUMFILLLINES] = {  // Was the last fill a success (=fill time
 };
 
 int LineFillData[NUMFILLLINES][FILLLOGLENGTH];  // Stores the LED value log for last fill on each line
-int LineFillDataMarker[NUMFILLLINES] = {        // Stores current log position for last fill on each line
+byte LineFillDataMarker[NUMFILLLINES] = {        // Stores current log position for last fill on each line
   0, 0, 0, 0
 };
 
 // Globals for managing ongoing fill
-int NumFilling = 0;  // Number of lines currently being filled
+byte NumFilling = 0;  // Number of lines currently being filled
 bool Filling[NUMFILLLINES] = {  // Stores whether each line is currently filling or not
   0, 0, 0, 0
 };
@@ -353,31 +355,32 @@ void readstatus(BridgeClient Client) {
 
   Client.print(F("# University of Liverpool - Nuclear Physics - LN2 Fill System\n\n# Full Fill-line Status Report:\n"));
   readtime(Client);
-  Client.print("Main tank valve is ");
-  Client.print(digitalRead(SUPPLYTANKPIN) == VALVEOPEN ? "Op\n" : "Cl\n");
-  Client.print(F("# LineNum\tActive?\tLED Pin\tLED Thresh\tADC val\tLED V\tValve Pin\tValve Status\tLast Fill Status\t\n\n"));
+  Client.print(F("Main tank valve is "));
+  Client.print(digitalRead(SUPPLYTANKPIN) == VALVEOPEN ? "Open\n" : "Closed\n");
+  Client.print(F("| LineNum |\tActive? |\tLED Pin |\tLED Thresh |\tADC val |\tLED V |\tValve Pin\t|Valve Status\t|\tLast Fill Status\n\n"));
 
   for (i = 0; i < NUMFILLLINES; i++) {
     AdcVal = analogRead(LineLedPins[i]);
     ValveOpen = (digitalRead(LineValvePins[i]) == VALVEOPEN);
 
-    Client.print(i);
-    Client.print("\t\t");
-    Client.print(LineActive[i] == 1 ? "Y" : "N");
-    Client.print("\t");
+    Client.print("| ");
+    Client.print(i+1);
+    Client.print("\t |");
+    Client.print(LineActive[i] == 1 ? "\tY" : "\tN");
+    Client.print("\t |\t");
     Client.print(LineLedPins[i]);
-    Client.print("\t");
+    Client.print("\t |\t");
     Client.print(LineLedThresh[i]);
-    Client.print("\t\t");
+    Client.print("\t |\t");
     Client.print(AdcVal);
-    Client.print("\t");
+    Client.print("\t |\t");
     Client.print(Adc2Volts(AdcVal));
-    Client.print("\t");
+    Client.print("\t|\t");
     Client.print(LineValvePins[i]);
-    Client.print("\t\t");
-    Client.print(ValveOpen ? "Op" : "Cl");
+    Client.print("\t |");
+    Client.print(ValveOpen ? "\tOp" : "\tCl");
 
-    Client.print("\t\t\t");
+    Client.print("\t|\t");
 
     if (Filling[i] == 0) {
       Client.print(LineFillStatus[i] ? "Succ! (" : "Fail! (");
@@ -393,9 +396,20 @@ void readstatus(BridgeClient Client) {
   // No the last fill data from each line
   Client.print("\n");
   Client.print("\n");
-  Client.print("Led values for last fill in ");
+  Client.print(F("Led values for last fill in "));
   Client.print(FILLLOGINTERVAL);
-  Client.print("s intervals:\n");
+  Client.print("s intervals:\n\n");
+
+  Client.print("Time  : ");
+  for (i=0; i<FILLLOGLENGTH; i++) {
+    Client.print(i*FILLLOGINTERVAL);
+    if (i<10) {
+      Client.print("  ");
+    }
+    else {
+      Client.print(" ");
+    }
+  }
   for (i = 0; i < NUMFILLLINES; i++) {
       Client.print("\nLine ");
       Client.print(i+1);
@@ -422,20 +436,20 @@ void testprint(BridgeClient Client) {
 // Functions for initiating/managing fill cylce
 // -----------------------------------------------
 
-// Fill a single line, number form URL, doesn't block server
+// Fill a single line, number from URL, doesn't block server
 void fillline(BridgeClient Client) {
 
   int LineNumber;
   // Get linenumber and check valid
   LineNumber = Client.parseInt();
   if (LineNumber < 1 || LineNumber > NUMFILLLINES) {
-    Client.print("Line number should be between 1 and ");
+    Client.print(F("Line number should be between 1 and "));
     Client.print(NUMFILLLINES);
     Client.print(".\n\n");
     return;
   }
   if (Filling[LineNumber-1] == 1) {
-    Client.print("Fill already underway.  Try reading status.");
+    Client.print(F("Fill already underway.  Try reading status."));
     return;
   }
 
@@ -446,7 +460,7 @@ void fillline(BridgeClient Client) {
   Client.print("\n\n");
 
   // Open main valve to tank
-  Client.print("Opening supply tank valve...\n");
+  Client.print(F("Opening supply tank valve...\n"));
   digitalWrite(SUPPLYTANKPIN, VALVEOPEN);
 
   // Record that line is filling and open valve
@@ -459,7 +473,7 @@ void fillline(BridgeClient Client) {
   // First entry in fill data record
   LineFillData[LineNumber-1][LineFillDataMarker[LineNumber-1]] = analogRead(LineLedPins[LineNumber-1]);
   // Print message
-  Client.print("Opening line ");
+  Client.print(F("Opening line "));
   Client.print(LineNumber);
   Client.print("\n");
   readtime(Client);
@@ -548,14 +562,14 @@ int fillline_old(BridgeClient Client) {
 // Fill all active lines
 void fillall(BridgeClient Client) {
 
-  Client.print("Filling all active lines...\n\n");
+  Client.print(F("Filling all active lines...\n\n"));
 
   // Open main valve to tank
-  Client.print("Opening supply tank valve...");
+  Client.print(F("Opening supply tank valve..."));
   digitalWrite(SUPPLYTANKPIN, VALVEOPEN);
 
   if (NumFilling > 0) {
-    Client.print("Fill already underway.  Try reading status.");
+    Client.print(F("Fill already underway.  Try reading status."));
     return;
   }
   NumFilling = 0;
@@ -661,7 +675,7 @@ void updatefill() {
 // Function should reset all global variables to default state (i.e. closed valves, not filling)
 void resetall(BridgeClient Client) {
   int i;
-  Client.print("Shutting all valves and reseting internal variables...");
+  Client.print(F("Shutting all valves and reseting internal variables..."));
   // Close fill tank
   digitalWrite(SUPPLYTANKPIN, VALVECLOSED);
 
@@ -689,7 +703,7 @@ void activateline(BridgeClient Client) {
   int LineNumber = Client.parseInt();
 
   if (LineNumber < NUMFILLLINES && LineNumber > 0) {
-    Client.print("Ativating line ");
+    Client.print("Activating line ");
     Client.print(LineNumber);
     Client.print("\n");
     LineActive[LineNumber - 1] = 1;
