@@ -5,7 +5,7 @@
     <title>University of Liverpool - Nuclear Physics - LN2 Autofill</title>
     <style type="text/css">
       body {
-        padding-top: 5%;
+        padding-top: 4%;
         font-size: 14px;
         width: 95%;
         margin: auto;
@@ -19,8 +19,8 @@
       	width: 95%;
       	margin: 10px auto 0 auto;
       	text-align: left;
-        margin-bottom: 5%;
-        margin-top: 5%;
+        margin-bottom: 4%;
+        margin-top: 4%;
       }
       .Global ul {
         list-style-type: none;
@@ -29,8 +29,8 @@
         width: 95%;
       	margin: 10px auto 0 auto;
       	text-align: left;
-        margin-bottom: 5%;
-        margin-top: 5%;
+        margin-bottom: 4%;
+        margin-top: 4%;
       }
       .Reset ul {
         list-style-type: none;
@@ -57,6 +57,10 @@
       	list-style-type: none;
       	/*width: 100%;*/
       }
+
+      .Arduino {
+        
+      }
     </style>
   </head>
   <body>
@@ -66,17 +70,17 @@
     <div class='Reset'>
       <p> Reset: </p>
       <ul>
-        <li><a href="http://nucphysyun.local/arduino/resetall/0">Reset</a></li>
+        <li><a href="http://138.253.148.167/arduino/resetall/0">Reset</a></li>
       </ul>
     </div>
     <div class='Global'>
       <p> Global Options: </p>
       <ul>
-        <li><a href='http://nucphysyun.local/arduino/fillall/0'>Fill All Active Lines</a></li>
-        <li><a href='http://nucphysyun.local/arduino/readstatus/0'>Read Current System Status</a></li>
-        <li><a href='http://nucphysyun.local/arduino/readtime/0'>Show System Time</a></li>
-        <li><a href='http://nucphysyun.local/arduino/opentank/0'>Open Tank</a></li>
-        <li><a href='http://nucphysyun.local/arduino/closetank/0'>Close Tank</a></li>
+        <li><a href='http://138.253.148.167/arduino/fillall/0'>Fill All Active Lines</a></li>
+        <li><a href='http://138.253.148.167/arduino/readstatus/0'>Read Current System Status</a></li>
+        <li><a href='http://138.253.148.167/arduino/readtime/0'>Show System Time</a></li>
+        <li><a href='http://138.253.148.167/arduino/opentank/0'>Open Tank</a></li>
+        <li><a href='http://138.253.148.167/arduino/closetank/0'>Close Tank</a></li>
       </ul>
     </div>
     <p> Individual Line Options:</p>
@@ -84,70 +88,100 @@
 		  <div class='FillLine'>
 				<p> Line 1</p>
 				<ul>
-					<li><a href='http://nucphysyun.local/arduino/readled/1'>Read LED</a></li>
-          <li><a href='http://nucphysyun.local/arduino/readvalve/1'>Read Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/openline/1'>Open Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/closeline/1'>Close Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/fillline/1'>Fill Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/activateline/1'>Activate Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/deactivateline/1'>Deactivate Line</a></li>
+					<li><a href='http://138.253.148.167/arduino/readled/1'>Read LED</a></li>
+          <li><a href='http://138.253.148.167/arduino/readvalve/1'>Read Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/openline/1'>Open Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/closeline/1'>Close Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/fillline/1'>Fill Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/activateline/1'>Activate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/deactivateline/1'>Deactivate Line</a></li>
 				</ul>
 			</div>
 
 			<div class='FillLine'>
 				<p>Line 2</p>
 				<ul>
-          <li><a href='http://nucphysyun.local/arduino/readled/2'>Read LED</a></li>
-          <li><a href='http://nucphysyun.local/arduino/readvalve/2'>Read Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/openline/2'>Open Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/closeline/2'>Close Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/fillline/2'>Fill Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/activateline/2'>Activate Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/deactivateline/2'>Deactivate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/readled/2'>Read LED</a></li>
+          <li><a href='http://138.253.148.167/arduino/readvalve/2'>Read Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/openline/2'>Open Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/closeline/2'>Close Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/fillline/2'>Fill Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/activateline/2'>Activate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/deactivateline/2'>Deactivate Line</a></li>
 				</ul>
 			</div>
 
 			<div class='FillLine'>
 				<p>Line 3</p>
 				<ul>
-          <li><a href='http://nucphysyun.local/arduino/readled/3'>Read LED</a></li>
-          <li><a href='http://nucphysyun.local/arduino/readvalve/3'>Read Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/openline/3'>Open Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/closeline/3'>Close Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/fillline/3'>Fill Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/activateline/3'>Activate Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/deactivateline/3'>Deactivate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/readled/3'>Read LED</a></li>
+          <li><a href='http://138.253.148.167/arduino/readvalve/3'>Read Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/openline/3'>Open Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/closeline/3'>Close Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/fillline/3'>Fill Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/activateline/3'>Activate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/deactivateline/3'>Deactivate Line</a></li>
 				</ul>
 			</div>
 
 			<div class='FillLine'>
 				<p>Line 4</p>
 				<ul>
-          <li><a href='http://nucphysyun.local/arduino/readled/4'>Read LED</a></li>
-          <li><a href='http://nucphysyun.local/arduino/readvalve/4'>Read Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/openline/4'>Open Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/closeline/4'>Close Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/fillline/4'>Fill Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/activateline/4'>Activate Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/deactivateline/4'>Deactivate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/readled/4'>Read LED</a></li>
+          <li><a href='http://138.253.148.167/arduino/readvalve/4'>Read Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/openline/4'>Open Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/closeline/4'>Close Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/fillline/4'>Fill Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/activateline/4'>Activate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/deactivateline/4'>Deactivate Line</a></li>
 				</ul>
 			</div>
 
 			<div class='FillLine'>
 				<p>Line 5</p>
 				<ul>
-          <li><a href='http://nucphysyun.local/arduino/readled/5'>Read LED</a></li>
-          <li><a href='http://nucphysyun.local/arduino/readvalve/5'>Read Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/openline/5'>Open Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/closeline/5'>Close Valve</a></li>
-          <li><a href='http://nucphysyun.local/arduino/fillline/5'>Fill Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/activateline/5'>Activate Line</a></li>
-          <li><a href='http://nucphysyun.local/arduino/deactivateline/5'>Deactivate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/readled/5'>Read LED</a></li>
+          <li><a href='http://138.253.148.167/arduino/readvalve/5'>Read Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/openline/5'>Open Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/closeline/5'>Close Valve</a></li>
+          <li><a href='http://138.253.148.167/arduino/fillline/5'>Fill Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/activateline/5'>Activate Line</a></li>
+          <li><a href='http://138.253.148.167/arduino/deactivateline/5'>Deactivate Line</a></li>
 				</ul>
 			</div>
 
 
 		</div>
+
+    <div class='Arduino'>
+      <p>Arduino Options:</p>
+      <p>
+        Digital Read Pin:
+        <a href=http://138.253.148.167/arduino/digital/0>0</a>
+        <a href=http://138.253.148.167/arduino/digital/1>1</a>
+        <a href=http://138.253.148.167/arduino/digital/2>2</a>
+        <a href=http://138.253.148.167/arduino/digital/3>3</a>
+        <a href=http://138.253.148.167/arduino/digital/4>4</a>
+        <a href=http://138.253.148.167/arduino/digital/5>5</a>
+        <a href=http://138.253.148.167/arduino/digital/6>6</a>
+        <a href=http://138.253.148.167/arduino/digital/7>7</a>
+        <a href=http://138.253.148.167/arduino/digital/8>8</a>
+        <a href=http://138.253.148.167/arduino/digital/9>9</a>
+        <a href=http://138.253.148.167/arduino/digital/10>10</a>
+        <a href=http://138.253.148.167/arduino/digital/11>11</a>
+        <a href=http://138.253.148.167/arduino/digital/12>12</a>
+        <a href=http://138.253.148.167/arduino/digital/13>13</a>
+      </p>
+      <p>
+        Analogue Read Pin:
+        <a href=http://138.253.148.167/arduino/analog/0>0</a>
+        <a href=http://138.253.148.167/arduino/analog/1>1</a>
+        <a href=http://138.253.148.167/arduino/analog/2>2</a>
+        <a href=http://138.253.148.167/arduino/analog/3>3</a>
+        <a href=http://138.253.148.167/arduino/analog/4>4</a>
+        <a href=http://138.253.148.167/arduino/analog/5>5</a>
+      </p>
+    </div>
 
   </body>
 </html>
