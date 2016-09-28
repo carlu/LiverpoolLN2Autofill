@@ -31,9 +31,9 @@
 #define VALVEOPEN 1     // Value written to GPIO to open a valve
 #define VALVECLOSED 0   // "      "         "       close a valve
 
-#define FILLHOLDTIME 20   // Time in s for which LED must remain cold for fill success
 #define FILLMINTIME 60    // Min total time for a fill to be a success
-#define FILLTIMEOUT 360   // Max time for fill to be a success
+#define FILLTIMEOUT 600  // Max time for fill to be a success
+#define FILLHOLDTIME 20   // Time in s for which LED must remain cold for fill success
 
 #define FILLLOGINTERVAL 10  // Period in seconds of logging of LED value during fill
 #define FILLLOGLENGTH (FILLTIMEOUT/FILLLOGINTERVAL)+1    // Maximum length of log, should depend on FILLTIMEOUT
@@ -353,9 +353,15 @@ void readstatus(BridgeClient Client) {
   bool ValveOpen;
   int Status;
 
-  Client.print(F("# University of Liverpool - Nuclear Physics - LN2 Fill System\n\n# Full Fill-line Status Report:\n"));
+  Client.print(F("# University of Liverpool - Nuclear Physics - LN2 Fill System\n\n# Status Report:\n"));
   readtime(Client);
-  Client.print(F("Main tank valve is "));
+  Client.print(F("Minimum fill time: "));
+  Client.print(FILLMINTIME);
+  Client.print(F(" s\nMaximum fill time: "));
+  Client.print(FILLTIMEOUT);
+  Client.print(F(" s\nFill hold time: "));
+  Client.print(FILLHOLDTIME);
+  Client.print(F(" s\nMain tank valve is "));
   Client.print(digitalRead(SUPPLYTANKPIN) == VALVEOPEN ? "Open\n" : "Closed\n");
   Client.print(F("| LineNum |\tActive? |\tLED Pin |\tLED Thresh |\tADC val |\tLED V |\tValve Pin\t|Valve Status\t|\tLast Fill Status\n\n"));
 
@@ -405,6 +411,9 @@ void readstatus(BridgeClient Client) {
     Client.print(i*FILLLOGINTERVAL);
     if (i<10) {
       Client.print("  ");
+      if (i<1) {
+        Client.print(" ");
+      }
     }
     else {
       Client.print(" ");
