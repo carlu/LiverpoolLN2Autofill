@@ -36,6 +36,8 @@ from subprocess import Popen, PIPE
 DEBUG = 0
 
 # IP Address of microcontroller
+#   Please note: There is a script to update this value from true IP to localhost before
+#       commiting to repo.  Also script for vice versa.  These should be updated if this ine is changed.
 ControllerIP = "localhost:5000"
 
 # Setup urls for regular actions
@@ -49,12 +51,12 @@ LastFillTime = 0
 
 # Logging
 LogActive = 1
-LogFilePath = "/home/user/TempLog.txt"
+LogFilePath = '/Path/To/LogFile.txt'
 
 # Emails
 MailNotificationActive = 1
-MailAddressList = "email@company.com"
-SenderEmail = "sender@company.com"
+MailAddressList = "user@company.com"
+SenderEmail = "user@company.com"
 
 # Functions
 # -------------------------------
