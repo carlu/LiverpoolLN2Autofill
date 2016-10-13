@@ -80,7 +80,7 @@ def SendMail(Message):
     if MailNotificationActive:
         print("Sending Email to subscribers ({}):\n---".format(MailAddressList))
         MailContent = MIMEText(str(Message))
-        MailContent["From"] = "SenderEmail"
+        MailContent["From"] = SenderEmail
         MailContent["To"] = MailAddressList
         MailContent["Subject"] = "Message from LN2 Fill Server"
         p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
