@@ -6,8 +6,8 @@ StatusMessage = """# University of Liverpool - Nuclear Physics - LN2 Fill System
 # Status Report:
  Current system time is 83046s (23:4:6 5 1/1/1970)
 Minimum fill time: 10 s
-Maximum fill time: 30 s
-Fill hold time: 2 s
+Maximum fill time: 20 s
+Fill hold time: 5 s
 Main tank valve is Closed
 | LineNum |	Active? |	LED Pin |	LED Thresh |	ADC val |	LED V |	Valve Pin	|Valve Status	|	Last Fill Status
 

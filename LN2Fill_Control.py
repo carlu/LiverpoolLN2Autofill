@@ -24,7 +24,9 @@
 import urllib3
 import time as t
 import parse
+
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
@@ -33,7 +35,8 @@ from subprocess import Popen, PIPE
 # -------------------------------
 
 # Set this to 1 to output lots of extra information to terminal and some extra to logfile
-DEBUG = 0 # 0 = print important actions only, 1 = print all actions, 2+ = also print raw messages and junk
+DEBUG = 1 # 0 = print important actions only, 1 = print all actions, 2+ = also print raw messages and junk
+PLOTS = 1
 
 # IP Address of microcontroller
 #   Please note: There is a script to update this value from true IP to localhost before
@@ -51,7 +54,9 @@ LastFillTime = 0
 
 # Logging
 LogActive = 1
-LogFilePath = '/Users/cu/Temp/LogFile.txt'
+LogPath = '/Users/cu/Temp/'
+LogFile = 'LogFile.txt'
+LogFilePath = LogPath + LogFile
 
 # Emails
 MailNotificationActive = 1
@@ -104,6 +109,7 @@ def ParseStatus(StatusMessage):
     Status['MainTankStatus'] = "Closed"
     Status['LineStatus'] = []
     Status['NumLines'] = 0
+    Status['FillTimeScale'] = [];
     Status['LineFillStatus'] = []
 
     # Record of which fields have been freshly populated
@@ -114,6 +120,7 @@ def ParseStatus(StatusMessage):
     StatusCheck['MainTankStatus'] = 0
     StatusCheck['LineStatus'] = 0
     StatusCheck['NumLines'] = 0
+    StatusCheck['FillTimeScale'] = 0;
     StatusCheck['LineFillStatus'] = 0
 
     # Loop the actual status message and extract info,
@@ -216,6 +223,8 @@ def ParseStatus(StatusMessage):
             # Grab time scale for fill status info
             Items = Line.split()
             FillTimeScale = list(map(int,Items[2:len(Items)]))
+            Status['FillTimeScale'] = FillTimeScale
+            StatusCheck['FillTimeScale'] = 1
             # Launch loop to get last fill status info
             while StatusLineNum < len(Lines):
                 Line = Lines[StatusLineNum]
@@ -270,12 +279,32 @@ def CheckFillSuccess(Status):
         else:
             FillSuccessMessage += "Line {} inactive.\n".format(FillLine[0])
             InactiveCount += 1
+    # Now generate a plot of LED Volts vs Time for fill
+    if PLOTS:
+        Pdf = PdfPages(LogPath + 'LN2Plots.pdf')
+        TimeScale = list(map(int,Status['FillTimeScale']))
+        for Index, FillStatus in enumerate(Status['LineFillStatus']):
+            plt.figure(1)
+            Ax = plt.subplot(111)
+            AdcValues = list(map(int,FillStatus))
+            Ax.plot(TimeScale[0:len(AdcValues)],AdcValues,label="Line {}".format(Index+1))
+            #plt.show()
+        plt.legend(loc=2)
+        plt.suptitle("LN2 Fill: Adc Voltage Drop (ADC Units) vs Time", fontsize=14, fontweight='bold')
+        Ax.grid('on')
+        Ax.set_xlabel('Time (s)')
+        Ax.set_ylabel('Adc Value')
+        Pdf.savefig()
+        Pdf.close()
     if FailCount > 0:
         FillSuccessMessage = "ATTENTION - {} failure(s) out of {} active lines!!\n".format(FailCount,ActiveCount) + FillSuccessMessage
     else:
         FillSuccessMessage = "Looks good!\n" + FillSuccessMessage
     Log(LogFile,FillSuccessMessage)
     SendMail(FillSuccessMessage)
+
+
+
 
 # Function to record long term logs of status items (e.g. LED volts) and alert if contact is lost with microcontroller
 #   - Main job is to provide early warning (i.e. before an actual fill is initiated) if contact with the microcontroller is localhost
