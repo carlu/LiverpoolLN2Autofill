@@ -33,7 +33,7 @@ from subprocess import Popen, PIPE
 # -------------------------------
 
 # Set this to 1 to output lots of extra information to terminal and some extra to logfile
-DEBUG = 0
+DEBUG = 0 # 0 = print important actions only, 1 = print all actions, 2+ = also print raw messages and junk
 
 # IP Address of microcontroller
 #   Please note: There is a script to update this value from true IP to localhost before
@@ -51,7 +51,7 @@ LastFillTime = 0
 
 # Logging
 LogActive = 1
-LogFilePath = '/Path/To/LogFile.txt'
+LogFilePath = '/Users/cu/Temp/LogFile.txt'
 
 # Emails
 MailNotificationActive = 1
@@ -94,7 +94,7 @@ def SendMail(Message):
 #  - "line" can mean a physical LN2 fill line or a line of text in the status message, ugly
 #       but I couldn't think of better names at the time of writing.
 def ParseStatus(StatusMessage):
-    if DEBUG:
+    if DEBUG > 0:
         Log(LogFile,"Parsing status message...")
     # Populate dummy data for now, real function later
     Status = dict()
@@ -129,7 +129,7 @@ def ParseStatus(StatusMessage):
             continue # ..to next line of status message
         # So this should be a line containing some text
         StatusLines += 1
-        if DEBUG:  # If debugging, print line before parsing
+        if DEBUG > 1:  # If debugging, print line before parsing
             Log(LogFile,("Line: "+Line.decode('utf-8')))
         # Check for min fill time
         Flag = b"Minimum fill time:"
@@ -138,7 +138,7 @@ def ParseStatus(StatusMessage):
             Values = parse.parse(Pattern,Line.decode('utf-8'))
             Status['MinFillTime'] = int(Values[0])
             StatusCheck['MinFillTime'] = 1
-            if DEBUG:
+            if DEBUG > 0:
                 Log(LogFile,"MinFillTime = {}".format(Status['MinFillTime']))
             continue # ..to next line of status message
         # Check for max fill time
@@ -148,7 +148,7 @@ def ParseStatus(StatusMessage):
             Values = parse.parse(Pattern,Line.decode('utf-8'))
             Status['MaxFillTime'] = int(Values[0])
             StatusCheck['MaxFillTime'] = 1
-            if DEBUG:
+            if DEBUG > 0:
                 Log(LogFile,"MaxFillTime = {}".format(Status['MaxFillTime']))
             continue # ..to next line of status message
         # Check for fill hold time
@@ -158,7 +158,7 @@ def ParseStatus(StatusMessage):
             Values = parse.parse(Pattern,Line.decode('utf-8'))
             Status['FillHoldTime'] = int(Values[0])
             StatusCheck['FillHoldTime'] = 1
-            if DEBUG:
+            if DEBUG > 0:
                 Log(LogFile,'FillHoldTime = {}'.format(Status['FillHoldTime']))
             continue # ..to next line of status message
         # Check for main tank status
@@ -168,14 +168,14 @@ def ParseStatus(StatusMessage):
             Values = parse.parse(Pattern,Line.decode('utf-8'))
             Status['MainTankStatus'] = Values[0]
             StatusCheck['MainTankStatus'] = 1
-            if DEBUG:
+            if DEBUG > 0:
                 Log(LogFile,'MainTankStatus = {}'.format(Status['MainTankStatus']))
             continue # ..to next line of status message
         # Check for fill line data table
         Flag = b"| LineNum |"
         if Line[0:len(Flag)] == Flag:
             # Launch loop to get line status info
-            if DEBUG:
+            if DEBUG > 0:
                 Log(LogFile,"Starting line status loop...")
             Line = Lines[StatusLineNum]
             while len(Line) == 0: # Skip empty lines between column headings and real data
@@ -201,7 +201,7 @@ def ParseStatus(StatusMessage):
                         Status['NumLines'] += 1
                         StatusCheck['LineStatus'] = 1
                         StatusCheck['NumLines'] = 1
-                        if DEBUG:
+                        if DEBUG > 0:
                             Log(LogFile,'Line {} data = {}'.format(LineData[0],str(Items)))
                     else:
                         Log(LogFile,'Bad line data ({} chars, {} Items)'.format(len(Line),len(Items)))
@@ -227,16 +227,16 @@ def ParseStatus(StatusMessage):
                 # There should be no missing lines so FillLineNumber == number of entries so far.
                 assert(FillLineNumber == len(Status['LineFillStatus']))
                 StatusCheck['LineFillStatus'] = 1
-                if DEBUG:
+                if DEBUG > 0:
                     Log(LogFile,'Line {} fill data = {}'.format(FillLineNumber,LineFillRecord))
             continue # ..to next line of status message
         # If no match found for this line...
-        if DEBUG:
+        if DEBUG > 1:
             print("No match ({} chars)".format(len(Line)))
 
     # Check all status items have been processed
     for Key, Value in StatusCheck.items():
-        if DEBUG:
+        if DEBUG > 1:
             print('{} updated? = {}'.format(Key,Value))
         assert(int(Value) == 1)
     # Return Status dict to main
@@ -248,7 +248,7 @@ def ParseStatus(StatusMessage):
 #   - Should check if fill was succesful and make appropriate notifications
 #   - Also add total fill time to long term log
 def CheckFillSuccess(Status):
-    if DEBUG:
+    if DEBUG > 0:
         print("Checking fill success...")
     FailCount = 0
     ActiveCount = 0
@@ -264,7 +264,7 @@ def CheckFillSuccess(Status):
             elif FillLine[8][0:5] == b'Succ!':
                 FillSuccessMessage += "Fill Success!!! ({}s)\n".format(FillLine[9])
             else:
-                if DEBUG:
+                if DEBUG > 0:
                     print("What?")
                     print(FillLine[8][0:5])
         else:
@@ -282,12 +282,12 @@ def CheckFillSuccess(Status):
 #   - May also log long term LED volts to check for slow trends
 #   - Possibly in future will also be used to sync clocks between server and microcontroller.
 def CheckStatus(Status):
-    if DEBUG:
+    if DEBUG > 0:
         print("Checking status...")
 
 # Function to check response from microcontroller following intitiation of a fill
 def CheckFillInitiated(Response):
-    if DEBUG:
+    if DEBUG > 0:
         print("Checking fill initiated...")
 
 # Setup
@@ -295,7 +295,8 @@ def CheckFillInitiated(Response):
 
 # Open LogFile
 LogFile = open(LogFilePath,'a+')
-Log(LogFile,"Starting LN2 Autofill control script....")
+Log(LogFile,"------ Starting LN2 Autofill control script ------")
+Log(LogFile,"--------------------------------------------------")
 # Setup PoolManager to handle http requests
 Http = urllib3.PoolManager()
 
@@ -303,11 +304,11 @@ Http = urllib3.PoolManager()
 # -------------------------------
 
 while 1:
-    if DEBUG:
+    if DEBUG > 1:
         print("--------------- DEBUG MODE: New Cycle ------------------------")
     # Check Status
     StatusMessage = Http.request('GET', StatusUrl)
-    if DEBUG:
+    if DEBUG > 1:
         print("----- DEBUG MODE - Raw status message from Arduino ------- ")
         print(StatusMessage.data)
 
@@ -319,11 +320,11 @@ while 1:
     if TimeSinceFill > FillFrequency or LastFillTime == 0:
         LastFillTime = t.time()
         Log(LogFile,"Initiating fill...")
-        if DEBUG:
+        if DEBUG > 1:
             SendMail("Initiating LN2 Fill...")
         # Send command to fill all lines
         Response = Http.request('GET',FillAllUrl)
-        if DEBUG:
+        if DEBUG > 1:
             print("----- DEBUG MODE - FillAll acknowledgement message from Arduino ------- ")
             print(Response.data)
         CheckFillInitiated(Response)
@@ -332,7 +333,7 @@ while 1:
         t.sleep(Status['MaxFillTime']+1)
         Log(LogFile,"MaxFillTime expired, checking fill status...")
         StatusMessage = Http.request('GET', StatusUrl)
-        if DEBUG:
+        if DEBUG > 1:
             print("----- DEBUG MODE - Raw status message from Arduino ------- ")
             print(StatusMessage.data)
         Status = ParseStatus(StatusMessage.data)
@@ -340,7 +341,7 @@ while 1:
 
         #SendMail(StatusMessage.data)
     else:
-        if DEBUG:
+        if DEBUG > 1:
             Log(LogFile,"No fill this time...")
 
 
