@@ -73,6 +73,9 @@ SenderEmail = "user@company.com"
 # Plots
 PlotColours = ['r','g','b','c','m','k','y']
 
+# Data storage
+TotalFillTimeRecord = [[],[],[],[]]
+
 # Functions
 # -------------------------------
 
@@ -306,7 +309,7 @@ def CheckFillSuccess(Status):
     # Add min/max/hold times to top of status message
     FillSuccessMessage = "Current Min/Max/Hold time = {}/{}/{} s\n".format(Status['MinFillTime'],Status['MaxFillTime'],Status['FillHoldTime'])
     # Loop LN2lines, check if active, and add success/failure to the message.
-    for FillLine in Status["LineStatus"]:
+    for Index, FillLine in enumerate(Status["LineStatus"]):
         if FillLine[1] == b'Y':
             FillSuccessMessage += "Line {} active. ".format(FillLine[0])
             ActiveCount += 1
@@ -322,6 +325,7 @@ def CheckFillSuccess(Status):
         else:
             FillSuccessMessage += "Line {} inactive.\n".format(FillLine[0])
             InactiveCount += 1
+        TotalFillTimeRecord[Index].append(int(FillLine[9]))
     # Now generate a plot of LED Volts vs Time for fill
     if PLOTS:
         # Create pdf to store images and get the time scale from the status message
@@ -350,7 +354,25 @@ def CheckFillSuccess(Status):
         Ax.set_xlabel('Time (s)')
         Ax.set_ylabel('Adc Value')
         Pdf.savefig()
+
+        # Now a plot of the total fill time record
+        for Index, FTRecord in enumerate(TotalFillTimeRecord):
+            plt.figure(2)
+            Ax = plt.subplot(111)
+            if Index == 0:
+                plt.cla() # Clear axis if this is first line
+            PlotFormat = PlotColours[Index % len(PlotColours)]
+            Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat)
+        plt.legend(loc=2)
+        plt.suptitle("LN2 Fill: Total Fill Time", fontsize=14, fontweight='bold')
+        Ax.grid('on')
+        Ax.set_xlabel('Fill Number')
+        Ax.set_ylabel('Total Time (s)')
+        Pdf.savefig()
+
         Pdf.close()
+
+
     if FailCount > 0:
         FillSuccessMessage = "ATTENTION - {} failure(s) out of {} active lines!!\n".format(FailCount,ActiveCount) + FillSuccessMessage
     else:
