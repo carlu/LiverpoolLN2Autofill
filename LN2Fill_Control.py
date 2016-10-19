@@ -70,6 +70,9 @@ MailNotificationActive = 1
 MailAddressList = ["user@company.com"]
 SenderEmail = "user@company.com"
 
+# Plots
+PlotColours = ['r','g','b','c','m','k','y']
+
 # Functions
 # -------------------------------
 
@@ -292,13 +295,17 @@ def ParseStatus(StatusMessage):
 #   - Assumes status message is from at least MaxFillTime seconds after a recent fill of all active lines
 #   - Should check if fill was succesful and make appropriate notifications
 #   - Also add total fill time to long term log
+#   - Requires CheckFillSuccess.LastFill be initialised e.g. CheckFillSuccess.LastFill = [[],[],[],[]]
 def CheckFillSuccess(Status):
     if DEBUG > 0:
         print("Checking fill success...")
+    # Variables to count lines and failures
     FailCount = 0
     ActiveCount = 0
     InactiveCount = 0
+    # Add min/max/hold times to top of status message
     FillSuccessMessage = "Current Min/Max/Hold time = {}/{}/{} s\n".format(Status['MinFillTime'],Status['MaxFillTime'],Status['FillHoldTime'])
+    # Loop LN2lines, check if active, and add success/failure to the message.
     for FillLine in Status["LineStatus"]:
         if FillLine[1] == b'Y':
             FillSuccessMessage += "Line {} active. ".format(FillLine[0])
@@ -317,13 +324,25 @@ def CheckFillSuccess(Status):
             InactiveCount += 1
     # Now generate a plot of LED Volts vs Time for fill
     if PLOTS:
+        # Create pdf to store images and get the time scale from the status message
         Pdf = PdfPages(LogPath + 'LN2Plots.pdf')
         TimeScale = list(map(int,Status['FillTimeScale']))
+        # Loop LN2lines and get the LED adc values from each, add to plot
         for Index, FillStatus in enumerate(Status['LineFillStatus']):
             plt.figure(1)
             Ax = plt.subplot(111)
+            if Index == 0:
+                plt.cla() # Clear axis if this is first line
+            # If we have a previous fill ,plot that first
+            if len(CheckFillSuccess.LastFill[Index]) > 0:
+                PlotFormat = PlotColours[Index % len(PlotColours)] + "--"
+                Ax.plot(TimeScale[0:len(CheckFillSuccess.LastFill[Index])],CheckFillSuccess.LastFill[Index],PlotFormat,label="Line {} (previous)".format(Index+1))
+            # Then get the latest fill values and plot them
             AdcValues = list(map(int,FillStatus))
-            Ax.plot(TimeScale[0:len(AdcValues)],AdcValues,label="Line {}".format(Index+1))
+            PlotFormat = PlotColours[Index % len(PlotColours)] + "-"
+            Ax.plot(TimeScale[0:len(AdcValues)],AdcValues,PlotFormat,label="Line {}".format(Index+1))
+            # Finally, store the latest fill as the previous.
+            CheckFillSuccess.LastFill[Index] = AdcValues
             #plt.show()
         plt.legend(loc=2)
         plt.suptitle("LN2 Fill: Adc Voltage Drop (ADC Units) vs Time", fontsize=14, fontweight='bold')
@@ -367,10 +386,11 @@ Log(LogFile,"------ Starting LN2 Autofill control script ------")
 Log(LogFile,"--------------------------------------------------")
 # Setup PoolManager to handle http requests
 Http = urllib3.PoolManager()
+# Initialise last fill record in CheckFillStatus()
+CheckFillSuccess.LastFill = [[],[],[],[]]
 
 # Main loop
 # -------------------------------
-
 while 1:
     if DEBUG > 1:
         print("--------------- DEBUG MODE: New Cycle ------------------------")
