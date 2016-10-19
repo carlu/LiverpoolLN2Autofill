@@ -21,15 +21,22 @@
 #       * Total fill time for all fills.
 #   * Auto-update files relating to a web status page.
 
+# Basics...
 import urllib3
 import time as t
 import parse
 
+# Plotting...
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
+# Email...
+import smtplib
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from subprocess import Popen, PIPE
+from email.mime.base import MIMEBase
+from email import encoders
 
 # Configuration
 # -------------------------------
@@ -54,13 +61,13 @@ LastFillTime = 0
 
 # Logging
 LogActive = 1
-LogPath = '/Users/cu/Temp/'
+LogPath = '/Path/To/Log/'
 LogFile = 'LogFile.txt'
 LogFilePath = LogPath + LogFile
 
 # Emails
 MailNotificationActive = 1
-MailAddressList = "user@company.com"
+MailAddressList = ["user@company.com"]
 SenderEmail = "user@company.com"
 
 # Functions
@@ -81,16 +88,45 @@ def Log(LogFile,Message):
 
 
 # Send email messages to subscribed addresses
-def SendMail(Message):
+def SendMail(Message,*args):
     if MailNotificationActive:
-        print("Sending Email to subscribers ({}):\n---".format(MailAddressList))
-        MailContent = MIMEText(str(Message))
-        MailContent["From"] = SenderEmail
-        MailContent["To"] = MailAddressList
-        MailContent["Subject"] = "Message from LN2 Fill Server"
-        p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
-        p.communicate(bytes(MailContent.as_string(),'UTF-8'))
-        print(Message)
+        print("Sending Email to subscribers ({}):\n---".format(", ".join(MailAddressList)))
+
+        # Create MIME object and add header info
+        msg = MIMEMultipart()
+        msg['Subject'] = 'Message from LN2 Fill Server'
+        msg['From'] = SenderEmail
+        msg['To'] = ", ".join(MailAddressList)
+
+        # Create body as MIMEText object
+        BodyText= MIMEText(Message, 'plain')
+        print(BodyText)
+        # Attach body to message
+        msg.attach(BodyText)
+
+        # Assume we know that the image files are all in PDF format
+        for arg in args:
+            # Open the files in binary mode.  Let the MIMEImage class automatically
+            # guess the specific image type.
+            FilePath=str(arg)
+            # OPen file for attachment
+            File = open(FilePath, 'rb')
+            # Create empty MIME encoded file
+            MIMEFile = MIMEBase('application','pdf')
+            # Add contents of file to MIMEFile
+            MIMEFile.set_payload(File.read())
+            File.close()
+            # Encode in base64, bit unsure what's going on here but it was  needed to get this working
+            encoders.encode_base64(MIMEFile)
+            # Add header to MIMEFile and attach to message
+            MIMEFile.add_header('Content-Disposition','attachment;filename={}'.format(FilePath))
+            # Attach file to the message
+            msg.attach(MIMEFile)
+
+        # Send the email via our own SMTP server.
+        Smtp = smtplib.SMTP('localhost')
+        Smtp.sendmail(SenderEmail, MailAddressList, msg.as_string())
+        Smtp.quit()
 
 # Function to parse StatusMessage returned by microcontroller and populate dict with results
 #   - need to be careful with string types, default python3 strings are utf-8 unicode
@@ -301,7 +337,10 @@ def CheckFillSuccess(Status):
     else:
         FillSuccessMessage = "Looks good!\n" + FillSuccessMessage
     Log(LogFile,FillSuccessMessage)
-    SendMail(FillSuccessMessage)
+    if PLOTS:
+        SendMail(FillSuccessMessage,(LogPath + 'LN2Plots.pdf'))
+    else:
+        SendMail(FillSuccessMessage)
 
 
 
