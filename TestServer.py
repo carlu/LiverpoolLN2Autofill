@@ -28,7 +28,8 @@ Line 4: 0 """
 FillMessage="""Filling all active lines...
 
 Opening supply tank valve...Opening line 1 -  Current system time is 534236s (4:23:56 4 7/1/1970)
-Opening line 2 -  Current system time is 534237s (4:23:57 4 7/1/1970)"""
+Opening line 2 -  Current system time is 534237s (4:23:57 4 7/1/1970)
+"""
 
 @app.route('/')
 def hello_world():

@@ -56,7 +56,7 @@ const byte LineLedPins[NUMFILLLINES] = {    // ADC# used to read LED for each li
 };
 
 const float LineLedThresh[NUMFILLLINES] = {  // Threshold volts accross LED to class as "cold"
-  1.9,1.9,1.9,1.9
+  1.86,1.86,1.86,1.86
 };
 
 bool LineActive[NUMFILLLINES] = {  // Is this line active (used for "fillall" command)
@@ -346,6 +346,9 @@ void readtime(BridgeClient Client) {
   return;
 }
 
+// Function to read current status of the system.
+// WARNING: If this is updated, python script which monitors status should
+//    be updated to match.
 void readstatus(BridgeClient Client) {
 
   int i,j;
@@ -389,7 +392,7 @@ void readstatus(BridgeClient Client) {
     Client.print("\t|\t");
 
     if (Filling[i] == 0) {
-      Client.print(LineFillStatus[i] ? "Succ! (" : "Fail! (");
+      Client.print(LineFillStatus[i] > 0 ? "Succ! (" : "Fail! (");
       Client.print(LineFillStatus[i]);
       Client.print(")");
     } else {
@@ -571,17 +574,17 @@ int fillline_old(BridgeClient Client) {
 // Fill all active lines
 void fillall(BridgeClient Client) {
 
-  Client.print(F("Filling all active lines...\n\n"));
-
-  // Open main valve to tank
-  Client.print(F("Opening supply tank valve..."));
-  digitalWrite(SUPPLYTANKPIN, VALVEOPEN);
-
   if (NumFilling > 0) {
     Client.print(F("Fill already underway.  Try reading status."));
     return;
   }
   NumFilling = 0;
+
+  Client.print(F("Filling all active lines...\n\n"));
+
+  // Open main valve to tank
+  Client.print(F("Opening supply tank valve...\n"));
+  digitalWrite(SUPPLYTANKPIN, VALVEOPEN);
 
   for (int i = 0; i < NUMFILLLINES; i++) {
     if (LineActive[i] == 1) {
@@ -635,7 +638,7 @@ void updatefill() {
             ValvePin = LineValvePins[i];
             digitalWrite(ValvePin, VALVECLOSED);
             if (FillTime < FILLMINTIME) { // Record Fill fail if too short
-              LineFillStatus[i] = 0;
+              LineFillStatus[i] = -1 * (int(now() - FillStartTime[i]));
             } else { // Record fill success otherwise
               LineFillStatus[i] = int(now() - FillStartTime[i]);
             }
@@ -666,7 +669,7 @@ void updatefill() {
         digitalWrite(ValvePin, VALVECLOSED);
         // Record fill failure
         NumFilling -= 1;
-        LineFillStatus[i] = 0;
+        LineFillStatus[i] = -1 * (int(now() - FillStartTime[i]));
         Filling[i] = 0;
       }
       // If numfilling is now zero, shut off main tank

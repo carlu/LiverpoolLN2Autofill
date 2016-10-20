@@ -314,7 +314,14 @@ def CheckFillSuccess(Status):
             FillSuccessMessage += "Line {} active. ".format(FillLine[0])
             ActiveCount += 1
             if FillLine[8][0:5] == b'Fail!':
-                FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) !!!!!!!!!!\n".format(FillLine[9])
+                if FillLine[9] <= (-1 * Status['MinFillTime']):
+                    FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) TOO SHORT !!!!!!!!!!\n".format(FillLine[9])
+                elif FillLine[9] <= (-1 * Status['MaxFillTime']):
+                    FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) TOO LONG !!!!!!!!!!\n".format(FillLine[9])
+                elif FillLine[9] == 0:
+                    FillSuccessMessage += "!!!!! FILL FAILED ({}s) t=0 (erm, I'm not expecting this to happen...) !!!!!!!!!!\n".format(FillLine[9])
+                else:
+                    FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) UNKNOWN CONDITION !!!!!!!!!!\n".format(FillLine[9])
                 FailCount += 1
             elif FillLine[8][0:5] == b'Succ!':
                 FillSuccessMessage += "Fill Success!!! ({}s)\n".format(FillLine[9])
@@ -361,7 +368,7 @@ def CheckFillSuccess(Status):
             Ax = plt.subplot(111)
             if Index == 0:
                 plt.cla() # Clear axis if this is first line
-            PlotFormat = PlotColours[Index % len(PlotColours)]
+            PlotFormat = PlotColours[Index % len(PlotColours)] + "x"
             Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat)
         plt.legend(loc=2)
         plt.suptitle("LN2 Fill: Total Fill Time", fontsize=14, fontweight='bold')
