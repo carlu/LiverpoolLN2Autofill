@@ -25,6 +25,7 @@
 import urllib3
 import time as t
 import parse
+import os
 
 # Plotting...
 import matplotlib.pyplot as plt
@@ -58,6 +59,7 @@ FillAllUrl = 'http://'+ControllerIP +'/arduino/fillall/0'
 PollFrequency = 30 # Seconds
 FillFrequency = 24 * 60 * 60 # Seconds
 LastFillTime = 0
+NumberOfFillLines = 4
 
 # Logging
 LogActive = 1
@@ -73,8 +75,8 @@ SenderEmail = "user@company.com"
 # Plots
 PlotColours = ['r','g','b','c','m','k','y']
 
-# Data storage
-TotalFillTimeRecord = [[],[],[],[]]
+# Fill record  and save location
+FillRecordSaveFile = '/Path/to/Temp/FillData.txt'
 
 # Functions
 # -------------------------------
@@ -332,7 +334,7 @@ def CheckFillSuccess(Status):
         else:
             FillSuccessMessage += "Line {} inactive.\n".format(FillLine[0])
             InactiveCount += 1
-        TotalFillTimeRecord[Index].append(int(FillLine[9]))
+        CheckFillSuccess.TotalFillTimeRecord[Index].append(int(FillLine[9]))
     # Now generate a plot of LED Volts vs Time for fill
     if PLOTS:
         # Create pdf to store images and get the time scale from the status message
@@ -354,7 +356,7 @@ def CheckFillSuccess(Status):
             Ax.plot(TimeScale[0:len(AdcValues)],AdcValues,PlotFormat,label="Line {}".format(Index+1))
             # Finally, store the latest fill as the previous.
             CheckFillSuccess.LastFill[Index] = AdcValues
-            #plt.show()
+        # Now make the plot pretty and add to pdf
         plt.legend(loc=2)
         plt.suptitle("LN2 Fill: Adc Voltage Drop (ADC Units) vs Time", fontsize=14, fontweight='bold')
         Ax.grid('on')
@@ -363,13 +365,14 @@ def CheckFillSuccess(Status):
         Pdf.savefig()
 
         # Now a plot of the total fill time record
-        for Index, FTRecord in enumerate(TotalFillTimeRecord):
+        for Index, FTRecord in enumerate(CheckFillSuccess.TotalFillTimeRecord):
             plt.figure(2)
             Ax = plt.subplot(111)
             if Index == 0:
                 plt.cla() # Clear axis if this is first line
             PlotFormat = PlotColours[Index % len(PlotColours)] + "x"
             Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat)
+        # Now make the plot pretty and add to pdf
         plt.legend(loc=2)
         plt.suptitle("LN2 Fill: Total Fill Time", fontsize=14, fontweight='bold')
         Ax.grid('on')
@@ -389,6 +392,16 @@ def CheckFillSuccess(Status):
         SendMail(FillSuccessMessage,(LogPath + 'LN2Plots.pdf'))
     else:
         SendMail(FillSuccessMessage)
+
+    # Finally save FillTimeRecord to file
+    with open(FillRecordSaveFile, 'w') as File:
+        # Loop fill lines and for each one create a string of the times.  new line of text for each ln2 line
+        for Line in CheckFillSuccess.TotalFillTimeRecord:
+            s = '';
+            for Fill in Line:
+                s += str(Fill) + ' '
+            s += '\n'
+            File.write(s)
 
 
 
@@ -415,8 +428,31 @@ Log(LogFile,"------ Starting LN2 Autofill control script ------")
 Log(LogFile,"--------------------------------------------------")
 # Setup PoolManager to handle http requests
 Http = urllib3.PoolManager()
+
+# Check for saved fill data
+if os.path.isfile(FillRecordSaveFile):
+    Log(LogFile,('Loading fill record from: ' + FillRecordSaveFile))
+    CheckFillSuccess.TotalFillTimeRecord = []
+    # If saved data exists, open file and loop lines
+    with open(FillRecordSaveFile, 'r') as File:
+        Lines = File.readlines()
+        for Line in Lines:
+            # Map numbers in the line to a list of ints and append to fill time record
+            CheckFillSuccess.TotalFillTimeRecord.append(list(map(int,Line.split())))
+    Log(LogFile,('Loaded.'))
+# If no saved data then create a new fill record...
+else:
+    Log(LogFile,'Starting new fill time record.')
+    CheckFillSuccess.TotalFillTimeRecord = []
+    for Line in range(NumberOfFillLines):
+        CheckFillSuccess.TotalFillTimeRecord.append([])
+
+
 # Initialise last fill record in CheckFillStatus()
-CheckFillSuccess.LastFill = [[],[],[],[]]
+CheckFillSuccess.LastFill = []
+for Line in range(NumberOfFillLines):
+    CheckFillSuccess.LastFill.append([])
+
 
 # Main loop
 # -------------------------------
