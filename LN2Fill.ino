@@ -41,7 +41,7 @@
                                                         //  to be an int instead of a byte
 
 #define SUPPLYTANKPIN 12  // GPIO# used to open supply valve
-#define SYSTEMACTIVELEDPIN 13
+#define SYSTEMACTIVELEDPIN 5
 #define NUMFILLLINES 4  // Total number of fill lines being managed
 
 // Global variables
@@ -92,7 +92,7 @@ time_t ColdStartTime[NUMFILLLINES] = {  // Time LED last indicated cold for each
 void setup() {
 
   // Initialise serial comms
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
   // Initialise pins
   int Pin, Line;
