@@ -41,6 +41,7 @@
                                                         //  to be an int instead of a byte
 
 #define SUPPLYTANKPIN 12  // GPIO# used to open supply valve
+#define SYSTEMACTIVELEDPIN 13
 #define NUMFILLLINES 4  // Total number of fill lines being managed
 
 // Global variables
@@ -56,7 +57,7 @@ const byte LineLedPins[NUMFILLLINES] = {    // ADC# used to read LED for each li
 };
 
 const float LineLedThresh[NUMFILLLINES] = {  // Threshold volts accross LED to class as "cold"
-  1.86,1.86,1.86,1.86
+  1.75,1.75,1.75,1.75
 };
 
 bool LineActive[NUMFILLLINES] = {  // Is this line active (used for "fillall" command)
@@ -97,6 +98,8 @@ void setup() {
   int Pin, Line;
   pinMode(SUPPLYTANKPIN, OUTPUT);  // Main supply valve control
   digitalWrite(SUPPLYTANKPIN, VALVECLOSED);
+  pinMode(SYSTEMACTIVELEDPIN, OUTPUT);
+  digitalWrite(SYSTEMACTIVELEDPIN, 1);
   for (Line = 0; Line < NUMFILLLINES; Line++) { // Individual line valves
     Pin = LineValvePins[Line];
     pinMode(Pin, OUTPUT);

@@ -315,13 +315,17 @@ def CheckFillSuccess(Status):
         if FillLine[1] == b'Y':
             FillSuccessMessage += "Line {} active. ".format(FillLine[0])
             ActiveCount += 1
-            if FillLine[8][0:5] == b'Fail!':
-                if FillLine[9] <= (-1 * Status['MinFillTime']):
+            if FillLine[8][0:5] == b'Fail!':  # If fill has failed, t->-t
+                # If 0 > t > -1*MinFillTime = Too Short!
+                if FillLine[9] >= (-1 * Status['MinFillTime']):
                     FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) TOO SHORT !!!!!!!!!!\n".format(FillLine[9])
+                # If -1*MinFillTime > t >= -1*MAxFillTime = Timout
                 elif FillLine[9] <= (-1 * Status['MaxFillTime']):
-                    FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) TOO LONG !!!!!!!!!!\n".format(FillLine[9])
+                    FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) TIMEOUT !!!!!!!!!!\n".format(FillLine[9])
+                # Should not reach this condition, t=0
                 elif FillLine[9] == 0:
                     FillSuccessMessage += "!!!!! FILL FAILED ({}s) t=0 (erm, I'm not expecting this to happen...) !!!!!!!!!!\n".format(FillLine[9])
+                # All other, i.e. t < -1* MaxFillTime (shouldn't happen ever), or t>0 (shouldn't happen at same time as "Fail")
                 else:
                     FillSuccessMessage += "!!!!!!!!! FILL FAILED ({}s) UNKNOWN CONDITION !!!!!!!!!!\n".format(FillLine[9])
                 FailCount += 1
@@ -371,9 +375,9 @@ def CheckFillSuccess(Status):
             if Index == 0:
                 plt.cla() # Clear axis if this is first line
             PlotFormat = PlotColours[Index % len(PlotColours)] + "x"
-            Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat)
+            Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat,label="Line {}".format(Index+1),markersize=20)
         # Now make the plot pretty and add to pdf
-        plt.legend(loc=2)
+        #plt.legend(loc=2) # Commented as labels same as previous plot
         plt.suptitle("LN2 Fill: Total Fill Time", fontsize=14, fontweight='bold')
         Ax.grid('on')
         Ax.set_xlabel('Fill Number')
