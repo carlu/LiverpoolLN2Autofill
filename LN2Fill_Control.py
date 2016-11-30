@@ -43,7 +43,7 @@ from email import encoders
 import Config as Conf
 
 # Call configuration functions
-S = Conf.Configure()  # Settings dict, called "S" to avoid long lines later
+S = Conf.Configure()  # Settings dict, called "S" to avoid long lines later in script
 
 # Functions
 # -------------------------------
@@ -424,6 +424,7 @@ CheckFillSuccess.LastFill = []
 for Line in range(S['NumberOfFillLines']):
     CheckFillSuccess.LastFill.append([])
 
+RetryCount = 0
 
 # Main loop
 # -------------------------------
@@ -431,37 +432,95 @@ while 1:
     if S['DEBUG'] > 1:
         print("--------------- DEBUG MODE: New Cycle ------------------------")
     # Check Status
-    StatusMessage = Http.request('GET', S['StatusUrl'])
+    try :
+        StatusMessage = Http.request('GET', S['StatusUrl'])
+    except:
+        Log(LogFile,"=== Exception Raised Fetching Status Message! ===")
+        RetryCount += 1
+        if RetryCount > S['RetryStatusMax']:
+            StatusMessage = ""
+            Log(LogFile,"=== Maximum retries reached! ===")
+            SendMail("Cannot communicate with Arduino - Max Retires Reached!")
+            break
+        t.sleep(S['RetryStatusTimeout'])
+        continue
+
+
     if S['DEBUG'] > 1:
         print("----- DEBUG MODE - Raw status message from Arduino ------- ")
         print(StatusMessage.data)
 
-    Status = ParseStatus(StatusMessage.data)
+    try:
+        Status = ParseStatus(StatusMessage.data)
+    except:
+        Log(LogFile,"=== Cannot parse status ===")
+        Log(LogFile,"Bad status as follows: ")
+        Log(LogFile,StatusMessage.data)
+        SendMail("Error parsing status message: \n\n" + StatusMessage.data)
+        break
+
     CheckStatus(Status)
 
     # Check time since fill
     TimeSinceFill = t.time() - S['LastFillTime']
     if TimeSinceFill > S['FillFrequency'] or S['LastFillTime'] == 0:
-        S['LastFillTime'] = t.time()
+
         Log(LogFile,"Initiating fill...")
         if S['DEBUG'] > 1:
             SendMail("Initiating LN2 Fill...")
+
         # Send command to fill all lines
-        Response = Http.request('GET',S['FillAllUrl'])
+        try :
+            Response = Http.request('GET',S['FillAllUrl'])
+        except:
+            Log(LogFile,"=== Exception Raised Initiating Fill! ===")
+            StatusMessage = ""
+            RetryCount += 1
+            if RetryCount > S['RetryStatusMax']:
+                Log(LogFile,"=== Maximum retries reached! ===")
+                SendMail("Cannot communicate with Arduino - Max Retires Reached!")
+                RetryCount = 0
+            t.sleep(S['RetryStatusTimeout'])
+            continue
+
         if S['DEBUG'] > 1:
             print("----- DEBUG MODE - FillAll acknowledgement message from Arduino ------- ")
             print(Response.data)
         CheckFillInitiated(Response)
+
         # Wait for fill timeout then check status
         Log(LogFile,"Waiting for fill timeout ({} seconds)...".format(Status['MaxFillTime']))
         t.sleep(Status['MaxFillTime']+1)
         Log(LogFile,"MaxFillTime expired, checking fill status...")
-        StatusMessage = Http.request('GET', S['StatusUrl'])
+
+        try :
+            StatusMessage = Http.request('GET', S['StatusUrl'])
+        except:
+            Log(LogFile,"=== Exception Raised Fetching Status Message After Fill! ===")
+            StatusMessage = ""
+            RetryCount += 1
+            if RetryCount > S['RetryStatusMax']:
+                Log(LogFile,"=== Maximum retries reached! ===")
+                SendMail("Cannot communicate with Arduino - Max Retires Reached!")
+                RetryCount = 0
+            t.sleep(S['RetryStatusTimeout'])
+            continue
+
         if S['DEBUG'] > 1:
             print("----- DEBUG MODE - Raw status message from Arduino ------- ")
             print(StatusMessage.data)
-        Status = ParseStatus(StatusMessage.data)
+
+        try:
+            Status = ParseStatus(StatusMessage.data)
+        except:
+            Log(LogFile,"=== Cannot parse status ===")
+            Log(LogFile,"Bad status as follows: ")
+            Log(LogFile,StatusMessage.data)
+            SendMail("Error parsing status message after fill: \n\n" + StatusMessage.data)
+            break
+
         CheckFillSuccess(Status)
+        S['LastFillTime'] = t.time()
 
         #SendMail(StatusMessage.data)
     else:

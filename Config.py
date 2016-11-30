@@ -16,9 +16,11 @@ def Configure():
     # Setup urls for regular actions
     Settings['StatusUrl'] = 'http://' + Settings['ControllerIP'] + '/arduino/readstatus/0'
     Settings['FillAllUrl'] = 'http://' + Settings['ControllerIP'] + '/arduino/fillall/0'
+    Settings['RetryStatusMax'] = 5 # Max retries when contacting arduino, above this warning message sent
+    Settings['RetryStatusTimeout'] = 120 # seconds before retry
 
     # Frequency/timing of actions
-    Settings['PollFrequency'] = 30 # Seconds
+    Settings['PollFrequency'] = 300 # Seconds
     Settings['FillFrequency'] = 24 * 60 * 60 # Seconds
     Settings['LastFillTime'] = 0
     Settings['NumberOfFillLines'] = 4
