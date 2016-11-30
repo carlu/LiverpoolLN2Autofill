@@ -479,7 +479,7 @@ while 1:
             if RetryCount > S['RetryStatusMax']:
                 Log(LogFile,"=== Maximum retries reached! ===")
                 SendMail("Cannot communicate with Arduino - Max Retires Reached!")
-                RetryCount = 0
+                break
             t.sleep(S['RetryStatusTimeout'])
             continue
 
@@ -502,7 +502,7 @@ while 1:
             if RetryCount > S['RetryStatusMax']:
                 Log(LogFile,"=== Maximum retries reached! ===")
                 SendMail("Cannot communicate with Arduino - Max Retires Reached!")
-                RetryCount = 0
+                break
             t.sleep(S['RetryStatusTimeout'])
             continue
 
