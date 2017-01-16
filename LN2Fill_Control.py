@@ -21,15 +21,15 @@
 #       * Total fill time for all fills.
 #   * Auto-update files relating to a web status page.
 
+# Plotting...
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
 # Basics...
 import urllib3
 import time as t
 import parse
 import os
-
-# Plotting...
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
 # Email...
 import smtplib
