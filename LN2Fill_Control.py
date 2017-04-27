@@ -1,4 +1,3 @@
-#!/usr/local/bin/python3
 #!/usr/bin/python3
 
 # Control Program for Liverpool Nucleasr Physics LN2 Fill System
@@ -22,6 +21,8 @@
 #   * Auto-update files relating to a web status page.
 
 # Plotting...
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -102,6 +103,15 @@ def SendMail(Message,*args):
         Smtp = smtplib.SMTP('localhost')
         Smtp.sendmail(S['SenderEmail'], S['MailAddressList'], msg.as_string())
         Smtp.quit()
+
+        # Also post message to ELog
+        ELogCommand = "/usr/local/bin64/elog  -h npa -p 8080 -l \"Ln2 Autofill\""
+        ELogCommand = ELogCommand + " -v -u ln2_user ln2_user -a Author=ln2_user"
+        ELogCommand = ELogCommand + " -a Type=Other -f {}".format(FilePath)
+        ELogCommand = ELogCommand + " -a Subject=\"AUTO: Fill status\" \"{}\"".format(Message)
+
+        os.system(ELogCommand)
+
 
 # Function to parse StatusMessage returned by microcontroller and populate dict with results
 #   - need to be careful with string types, default python3 strings are utf-8 unicode
@@ -431,39 +441,40 @@ RetryCount = 0
 while 1:
     if S['DEBUG'] > 1:
         print("--------------- DEBUG MODE: New Cycle ------------------------")
-    # Check Status
-    try :
-        StatusMessage = Http.request('GET', S['StatusUrl'])
-    except:
-        Log(LogFile,"=== Exception Raised Fetching Status Message! ===")
-        RetryCount += 1
-        if RetryCount > S['RetryStatusMax']:
-            StatusMessage = ""
-            Log(LogFile,"=== Maximum retries reached! ===")
-            SendMail("Cannot communicate with Arduino - Max Retires Reached!")
-            break
-        t.sleep(S['RetryStatusTimeout'])
-        continue
-
-
-    if S['DEBUG'] > 1:
-        print("----- DEBUG MODE - Raw status message from Arduino ------- ")
-        print(StatusMessage.data)
-
-    try:
-        Status = ParseStatus(StatusMessage.data)
-    except:
-        Log(LogFile,"=== Cannot parse status ===")
-        Log(LogFile,"Bad status as follows: ")
-        Log(LogFile,StatusMessage.data)
-        SendMail("Error parsing status message: \n\n" + StatusMessage.data)
-        break
-
-    CheckStatus(Status)
 
     # Check time since fill
     TimeSinceFill = t.time() - S['LastFillTime']
     if TimeSinceFill > S['FillFrequency'] or S['LastFillTime'] == 0:
+
+        # Check Status
+        try :
+            StatusMessage = Http.request('GET', S['StatusUrl'])
+        except:
+            Log(LogFile,"=== Exception Raised Fetching Status Message! ===")
+            RetryCount += 1
+            if RetryCount > S['RetryStatusMax']:
+                StatusMessage = ""
+                Log(LogFile,"=== Maximum retries reached! ===")
+                SendMail("Cannot communicate with Arduino - Max Retires Reached!")
+                break
+            t.sleep(S['RetryStatusTimeout'])
+            continue
+
+
+        if S['DEBUG'] > 1:
+            print("----- DEBUG MODE - Raw status message from Arduino ------- ")
+            print(StatusMessage.data)
+
+        try:
+            Status = ParseStatus(StatusMessage.data)
+        except:
+            Log(LogFile,"=== Cannot parse status ===")
+            Log(LogFile,"Bad status as follows: ")
+            Log(LogFile,StatusMessage.data)
+            SendMail("Error parsing status message: \n\n" + StatusMessage.data)
+            break
+
+        CheckStatus(Status)
 
         Log(LogFile,"Initiating fill...")
         if S['DEBUG'] > 1:
@@ -522,7 +533,6 @@ while 1:
         CheckFillSuccess(Status)
         S['LastFillTime'] = t.time()
 
-        #SendMail(StatusMessage.data)
     else:
         if S['DEBUG'] > 1:
             Log(LogFile,"No fill this time...")
