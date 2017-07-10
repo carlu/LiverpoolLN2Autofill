@@ -32,7 +32,7 @@
 #define VALVECLOSED 0   // "      "         "       close a valve
 
 #define FILLMINTIME 60    // Min total time for a fill to be a success
-#define FILLTIMEOUT 600  // Max time for fill to be a success
+#define FILLTIMEOUT 720  // Max time for fill to be a success
 #define FILLHOLDTIME 20   // Time in s for which LED must remain cold for fill success
 
 #define FILLLOGINTERVAL 10  // Period in seconds of logging of LED value during fill
