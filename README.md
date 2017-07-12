@@ -16,6 +16,7 @@ This repository contains the code for the University of Liverpool Nuclear Physic
     * Atmel ATmega32U4 microcontroller
     * Atheros AR9331 running OpenWRT wireless stack
     * 6 x 10bit 5V ADCs
+    * Replaced in latest version with Arduino Uno and Wirless shield.  Functionality the same.
 
 ## Software Components
 
@@ -33,7 +34,14 @@ This repository contains the code for the University of Liverpool Nuclear Physic
 	* Plot total fill time for all historical fills.
 	* Send email success/fail messages for all autofills, attach plots. (Requires local sendmail functionality)
 	* Detect other fail conditions such as no response from Arduino and email warnings.
-* Python/Flask based testserver to serve dummy data while debugging.  
+* Python/Flask based testserver to serve dummy data while debugging.
+* HTML page with links to quickly issue commands to Arduino controller.
+
+## To Do
+
+* Fix timing from control server so fill initiates at fixed time rather than after fixed duration.  Perhaps have either mode as an option.
+* When saving/reloading historical data, also save full list of ADC values for last fill so thery can be included on the plot for the first report email.
+* Change min-time/max-time/hold-time from definitions to variables in Arduino code.  Allow them to be updated from the python script (loaded from config file) or web interface.
 
 ## Authors
 
