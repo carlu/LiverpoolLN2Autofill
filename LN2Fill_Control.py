@@ -480,7 +480,7 @@ while 1:
  
         # Check Status
         try :
-            StatusMessage = Http.request('GET', S['StatusUrl'])
+            StatusMessage = Http.request('GET', S['StatusUrl'], timeout=60.0)
         except:
             Log(LogFile,"=== Exception Raised Fetching Status Message! ===")
             RetryCount += 1
@@ -514,7 +514,7 @@ while 1:
 
         # Send command to fill all lines
         try :
-            Response = Http.request('GET',S['FillAllUrl'])
+            Response = Http.request('GET',S['FillAllUrl'],timeout=60.0)
         except:
             Log(LogFile,"=== Exception Raised Initiating Fill! ===")
             StatusMessage = ""
@@ -537,7 +537,7 @@ while 1:
         Log(LogFile,"MaxFillTime expired, checking fill status...")
 
         try :
-            StatusMessage = Http.request('GET', S['StatusUrl'])
+            StatusMessage = Http.request('GET', S['StatusUrl'],timeout=60.0)
         except:
             Log(LogFile,"=== Exception Raised Fetching Status Message After Fill! ===")
             StatusMessage = ""
