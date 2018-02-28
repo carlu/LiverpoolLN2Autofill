@@ -352,7 +352,12 @@ def CheckFillSuccess(Status):
             if Index == 0:
                 plt.cla() # Clear axis if this is first line
             PlotFormat = S['PlotColours'][Index % len(S['PlotColours'])] + "-"
+            # unpythonic hack
+            for Index, Element in enumerate(FTRecord):
+                if int(Element) < 0:
+                    FTRecord[Index] = 0		
             Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat,label="Line {}".format(Index+1))
+
         # Now make the plot pretty and add to pdf
         #plt.legend(loc=2) # Commented as labels same as previous plot
         plt.suptitle("LN2 Fill: Total Fill Time", fontsize=14, fontweight='bold')
