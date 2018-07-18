@@ -353,10 +353,14 @@ def CheckFillSuccess(Status):
                 plt.cla() # Clear axis if this is first line
             PlotFormat = S['PlotColours'][Index % len(S['PlotColours'])] + "-"
             # unpythonic hack
-            for Index, Element in enumerate(FTRecord):
+            if len(FTRecord) > S['HistoryPlotPeriod']:
+                FTRecordTrunc = FTRecord[-1*S['HistoryPlotPeriod']::]
+            else:
+                FTRecordTrunc = FTRecord
+            for Index, Element in enumerate(FTRecordTrunc):
                 if int(Element) < 0:
-                    FTRecord[Index] = 0		
-            Ax.plot(range(0,len(FTRecord)),FTRecord,PlotFormat,label="Line {}".format(Index+1))
+                    FTRecordTrunc[Index] = 0		
+            Ax.plot(range(0,len(FTRecordTrunc)),FTRecordTrunc,PlotFormat,label="Line {}".format(Index+1))
 
         # Now make the plot pretty and add to pdf
         #plt.legend(loc=2) # Commented as labels same as previous plot

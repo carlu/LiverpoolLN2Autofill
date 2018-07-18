@@ -38,6 +38,7 @@ def Configure():
 
     # Plots
     Settings['PlotColours'] = ['r','g','b','c','m','k','y']
+    Settings['HistoryPlotPeriod'] = 90
 
     # Fill record  and save location
     Settings['FillRecordSaveFile'] = '/Path/To/Data/LN2AutofillData.txt'
